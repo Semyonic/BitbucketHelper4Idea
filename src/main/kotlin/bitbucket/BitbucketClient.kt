@@ -112,7 +112,7 @@ class BitbucketClient(
     private fun filterByProject(prs: List<PR>): List<PR> {
         return prs.filter {
             it.projectKey.equals(settings.project, true)
-            && it.repoSlug.equals(settings.slug, true)
+            && settings.slug.contains(it.repoSlug,true)
         }
     }
 
