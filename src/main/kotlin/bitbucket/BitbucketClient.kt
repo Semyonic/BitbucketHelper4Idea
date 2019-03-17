@@ -78,8 +78,9 @@ class BitbucketClient(
      */
     private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): List<PR> {
         return try {
-            val urlBuilder = urlBuilder().pathSegments("inbox", "pull-requests")
-            applyParameters(urlBuilder, role, start, limit)
+            // TODO: implement bitbucket version detector to prevent future exceptions
+            val urlBuilder = UrlBuilder.fromUrl(URL(settings.url))
+                    .pathSegments("rest", "inbox","latest","pull-requests","count")
 
             val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
             filterByProject(replayPageRequest(request) { inbox(role, limit, Start(it)) })
@@ -124,7 +125,7 @@ class BitbucketClient(
         return replayPageRequest(request) {findPRs(state, order, Start(it))}
     }
 
-    private fun urlBuilder() = UrlBuilder.fromUrl(URL(settings.url)).pathSegments("rest", "api", "1.0")
+    private fun urlBuilder() = UrlBuilder.fromUrl(URL(settings.url)).pathSegments("rest", "latest")
 
     private fun applyParameters(urlBuilder: UrlBuilder, vararg params: HttpRequestParameter) {
         for (param in params)
