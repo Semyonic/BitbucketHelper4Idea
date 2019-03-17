@@ -80,7 +80,7 @@ class BitbucketClient(
         return try {
             // TODO: implement bitbucket version detector to prevent future exceptions
             val urlBuilder = UrlBuilder.fromUrl(URL(settings.url))
-                    .pathSegments("rest", "inbox","latest","pull-requests","count")
+                    .pathSegments("rest", "inbox","latest","pull-requests")
 
             val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
             filterByProject(replayPageRequest(request) { inbox(role, limit, Start(it)) })
