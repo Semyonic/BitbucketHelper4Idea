@@ -1,9 +1,6 @@
 package bitbucket
 
-import bitbucket.data.Approve
-import bitbucket.data.PR
-import bitbucket.data.PagedResponse
-import bitbucket.data.SimpleUser
+import bitbucket.data.*
 import bitbucket.data.merge.MergeStatus
 import bitbucket.data.merge.Veto
 import bitbucket.httpparams.*
@@ -33,11 +30,18 @@ class BitbucketClient(
             objReader, object : TypeReference<MergeStatus>() {}, listener)
     private val pagedResponseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PagedResponse<PR>>() {}, listener)
+    private val appVersionResponseHandler = HttpResponseHandler(
+            objReader, object : TypeReference<AppVersion>() {}, listener)
     private val pullRequestResponseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PR>() {}, listener)
 
     fun reviewedPRs(): List<PR> {
         return inbox(Role.REVIEWER)
+    }
+
+    fun checkAppVersion(): AppVersion {
+        val request = httpRequestFactory.createGet("${settings.url}rest/api/1.0/application-properties")
+        return sendRequest(request, appVersionResponseHandler)
     }
 
     fun ownPRs(): List<PR> {
@@ -61,6 +65,24 @@ class BitbucketClient(
         }
     }
 
+    // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/decline
+    fun decline(pr: PR) {
+        try {
+            val urlBuilder = urlBuilder().pathSegments(
+                    "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "decline", settings.login)
+            println(urlBuilder.toUrlString())
+            val request = httpRequestFactory.createPost(urlBuilder.toUrlString())
+            val body = objWriter.writeValueAsBytes(Approve(SimpleUser(settings.login)))
+            val entity = ByteArrayEntity(body)
+            request.entity = entity
+            HttpResponseHandler.handle(httpClient.execute(request))
+        } catch (e: Exception) {
+            listener.requestFailed(e)
+            throw e
+        }
+    }
+
+
     fun merge(pr: PR): PR {
         return try {
             val urlBuilder = mergeUrl(pr)
@@ -78,7 +100,6 @@ class BitbucketClient(
      */
     private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): List<PR> {
         return try {
-            // TODO: implement bitbucket version detector to prevent future exceptions
             val urlBuilder = UrlBuilder.fromUrl(URL(settings.url))
                     .pathSegments("rest", "inbox","latest","pull-requests")
 

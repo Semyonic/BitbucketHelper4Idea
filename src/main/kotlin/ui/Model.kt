@@ -103,6 +103,18 @@ object Model {
         }
     }
 
+    fun decline(pr: PR, callback: Consumer<Boolean>) {
+        doInAppExecutor {
+            try {
+                BitbucketClientFactory.createClient().decline(pr)
+                showNotification("PR ${pr.title} is rejected")
+                invokeLater { callback.accept(true) }
+            } catch (e: Exception) {
+                log.warn(e)
+            }
+        }
+    }
+
     fun merge(pr: PR, callback: Consumer<Boolean>) {
         doInAppExecutor {
             try {
