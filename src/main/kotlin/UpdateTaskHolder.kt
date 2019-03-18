@@ -30,6 +30,12 @@ object UpdateTaskHolder {
             //if you want to cancel this task from another thread, you will have to wait until this block completes
             task.cancel()
             val client = BitbucketClientFactory.createClient(NotifyingClientListener())
+
+            /**
+             * Check BitBucket application version for API endpoints difference
+             * Bitbucket 4.3.1 endpoints differ from latest ones. This is a workaround fix
+             */
+            client.checkAppVersion()
             task = factory.invoke(client)
             val future = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
                     task, 0, 15, TimeUnit.SECONDS)

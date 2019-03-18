@@ -1,6 +1,6 @@
 <idea-plugin>
-    <id>myBitbucket</id>
-    <name>myBitbucket</name>
+    <id>Pull Requests</id>
+    <name>Pull Requests</name>
     <vendor email="bitbucket.plugin@gmail.com" url="https://github.com/BigBurritoInc">Big Burrito Inc.</vendor>
     <description><![CDATA[
     <p>See the list of assigned Bitbucket Server pull-requests, approve them, checkout corresponding branches using Git</p>
@@ -17,12 +17,12 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- todo: a pretty icon needed -->
-        <toolWindow id="myBitbucket" anchor="right"
+        <toolWindow id="Pull Requests" anchor="right"
                     icon="bitbucket-13.png" factoryClass="MainWindow">
 
         </toolWindow>
         <applicationConfigurable groupId="root" groupWeight="1" instance="ui.BitbucketHelperConfigurable" id="preferences.BitbucketHelper4Idea"
-                                 displayName="myBitbucket"/>
+                                 displayName="Pull Requests"/>
         <projectService serviceInterface="ui.Storer"
                         serviceImplementation="ui.Storer"/>
     </extensions>

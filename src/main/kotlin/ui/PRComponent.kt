@@ -25,10 +25,12 @@ open class PRComponent(
         imagesSource: MediaSource<Icon>,
         awtExecutor: Executor) : JPanel() {
 
-    val greenColor = Color(89, 168, 105)
+    val greenColor = Color(0, 168, 9)
+    val redColor = Color(192,1,0)
 
     private val checkoutBtn = JButton("▼ Checkout")
     val approveBtn = JButton("Approve")
+    val declineBtn = JButton("Decline")
     val mergeBtn = JButton("Merge")
     private val prLink: JLabel
     private val targetBranchLabel: JLabel
@@ -50,6 +52,7 @@ open class PRComponent(
                                  + "last updated $updatedAt")
         this.reviewersPanel = ReviewersPanel(ArrayList(this.pr.reviewers), imagesSource, awtExecutor)
         this.mergeBtn.isVisible = false
+        this.declineBtn.isVisible = false
         this.approveBtn.isVisible = false
 
         this.createComponentSpecificButton()
@@ -91,6 +94,8 @@ open class PRComponent(
         gbc.gridx++
         this.add(this.approveBtn, gbc)
         gbc.gridx++
+        this.add(this.declineBtn,gbc)
+        gbc.gridx++
         gbc.anchor = GridBagConstraints.WEST
         this.add(this.mergeBtn, gbc)
 
@@ -119,14 +124,28 @@ open class PRComponent(
         this.approveBtn.foreground = this.greenColor
         this.approveBtn.font = UIUtil.getButtonFont()
         this.approveBtn.isVisible = true
+        this.declineBtn.isVisible = true
+        this.mergeBtn.isVisible = true
     }
 
     open fun currentBranchChanged(branch: String) {
         val isActive = this.pr.fromBranch == branch
         this.border = if (isActive) BorderFactory.createLineBorder(UIUtil.getListSelectionBackground(), 3)
                 else UIUtil.getTextFieldBorder()
-        this.approveBtn.isVisible = isActive
+        this.approveBtn.isVisible = true
         this.checkoutBtn.isVisible = !isActive
+
+        this.declineBtn.addActionListener {
+            Model.decline(this.pr, Consumer { declined ->
+                if (declined) {
+                    this.declineBtn.text = "Declined"
+                    this.declineBtn.isEnabled = false
+                }
+            })
+        }
+        this.declineBtn.foreground = this.redColor
+        this.declineBtn.font = UIUtil.getButtonFont()
+        this.declineBtn.isVisible = true
     }
 }
 
@@ -138,6 +157,8 @@ class OwnPRComponent(ownPR: PR,
 
     override fun createComponentSpecificButton() {
         this.mergeBtn.isVisible = true
+        this.approveBtn.isVisible = true
+        this.declineBtn.isVisible = true
         this.mergeBtn.isEnabled = pr.mergeStatus.canMerge
         if (!pr.mergeStatus.canMerge) {
             this.mergeBtn.toolTipText = pr.mergeStatus.vetoesSummaries()
@@ -157,7 +178,8 @@ class OwnPRComponent(ownPR: PR,
 
     override fun currentBranchChanged(branch: String) {
         super.currentBranchChanged(branch)
-        this.approveBtn.isVisible = false
+        this.approveBtn.isVisible = true
+        this.declineBtn.isVisible = true
     }
 }
 

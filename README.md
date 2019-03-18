@@ -1,9 +1,9 @@
-# myBitbucket
+# Bitbucket Pull Requests
 
 This plugin for Intellij IDEA allows you to see and approve pull-requests assigned to you in Bitbucket Server. 
 The plugin is integrated with Git to allow checking out corresponding branches.
 
-![plugin example image](https://github.com/BigBurritoInc/BitbucketHelper4Idea/raw/master/src/main/resources/myBitbucket_example01.png)
+![plugin example image](https://github.com/Semyonic/BitbucketHelper4Idea/raw/master/src/main/resources/improvement.png)
 
 ## Configuring the plugin
 To configure the plugin open Idea's Settings window, navigate to **myBibucket** section, enter the base url with 
