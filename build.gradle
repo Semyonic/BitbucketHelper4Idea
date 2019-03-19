@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'BigBurritoInc'
-version '0.1.1'
+version '0.1.4'
 
 repositories {
     mavenCentral()
@@ -28,7 +28,6 @@ intellij {
     version '2018.3'
     plugins 'git4idea'
     pluginName 'myBitbucket'
-    alternativeIdePath 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2018.2.6'
     updateSinceUntilBuild false
 }
 patchPluginXml {
