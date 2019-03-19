@@ -93,6 +93,8 @@ open class PRComponent(
         this.add(this.checkoutBtn, gbc)
         gbc.gridx++
         this.add(this.approveBtn, gbc)
+        gbc.gridx+2
+        this.add(this.declineBtn,gbc)
         gbc.gridx++
         this.add(this.declineBtn,gbc)
         gbc.gridx++
