@@ -19,14 +19,13 @@ import java.util.concurrent.Executor
 import java.util.function.Consumer
 import javax.swing.*
 
-
 open class PRComponent(
         val pr: PR,
         imagesSource: MediaSource<Icon>,
         awtExecutor: Executor) : JPanel() {
 
     val greenColor = Color(0, 168, 9)
-    val redColor = Color(192,1,0)
+    val redColor = Color(192, 1, 0)
 
     private val checkoutBtn = JButton("▼ Checkout")
     val approveBtn = JButton("Approve")
@@ -47,7 +46,11 @@ open class PRComponent(
         this.targetBranchLabel = JBLabel("To: ${this.pr.toBranch}")
         val dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
         val updatedAt = this.pr.updatedAt.toLocalDateTime().format(dateTimeFormatter)
-        val commentsCount = "${this.pr.commentCount} " + if (this.pr.commentCount == 1) { "comment" } else { "comments" }
+        val commentsCount = "${this.pr.commentCount} " + if (this.pr.commentCount == 1) {
+            "comment"
+        } else {
+            "comments"
+        }
         this.authorLabel = JBLabel("By: ${this.pr.author.user.displayName} - #${this.pr.id} ($commentsCount) "
                                  + "last updated $updatedAt")
         this.reviewersPanel = ReviewersPanel(ArrayList(this.pr.reviewers), imagesSource, awtExecutor)
@@ -93,10 +96,10 @@ open class PRComponent(
         this.add(this.checkoutBtn, gbc)
         gbc.gridx++
         this.add(this.approveBtn, gbc)
-        gbc.gridx+2
-        this.add(this.declineBtn,gbc)
+        gbc.gridx + 2
+        this.add(this.declineBtn, gbc)
         gbc.gridx++
-        this.add(this.declineBtn,gbc)
+        this.add(this.declineBtn, gbc)
         gbc.gridx++
         gbc.anchor = GridBagConstraints.WEST
         this.add(this.mergeBtn, gbc)
@@ -133,7 +136,7 @@ open class PRComponent(
     open fun currentBranchChanged(branch: String) {
         val isActive = this.pr.fromBranch == branch
         this.border = if (isActive) BorderFactory.createLineBorder(UIUtil.getListSelectionBackground(), 3)
-                else UIUtil.getTextFieldBorder()
+        else UIUtil.getTextFieldBorder()
         this.approveBtn.isVisible = true
         this.checkoutBtn.isVisible = !isActive
 

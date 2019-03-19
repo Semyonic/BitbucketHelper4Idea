@@ -1,11 +1,13 @@
 import bitbucket.BitbucketClient
 import bitbucket.BitbucketClientFactory
 import bitbucket.ClientListener
+import bitbucket.data.PR
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
 import http.HttpResponseHandler
 import ui.Model
+import ui.Storer
 import java.io.IOException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -14,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger
 object UpdateTaskHolder {
     private val log = Logger.getInstance(UpdateTaskHolder::class.java)
     private val lock = Object()
+    private val state = Storer()
     var task: CancellableTask = DummyTask()
 
     fun reschedule() {
@@ -59,6 +62,7 @@ object UpdateTaskHolder {
                 //If user has too many open pull request, we will not retrieve merge status for every of them
                 ownPRs.subList(0, Math.min(ownPRs.size, 20)).forEach { it.mergeStatus = client.retrieveMergeStatus(it) }
                 Model.updateOwnPRs(ownPRs)
+                // TODO: Update created pull-requests filter here.
             } catch (e: HttpResponseHandler.UnauthorizedException) {
                 println("UnauthorizedException")
                 cancel()

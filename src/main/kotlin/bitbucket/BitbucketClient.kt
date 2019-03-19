@@ -20,7 +20,7 @@ import java.net.URL
 class BitbucketClient(
         private val httpClient: HttpClient,
         private val httpRequestFactory: HttpAuthRequestFactory,
-        private val settings: Settings,
+        val settings: Settings,
         objReader: ObjectReader,
         private val objWriter: ObjectWriter,
         private val listener: ClientListener

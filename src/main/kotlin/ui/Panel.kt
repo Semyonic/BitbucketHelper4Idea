@@ -5,9 +5,6 @@ import com.intellij.ui.components.panels.VerticalLayout
 import java.awt.Component
 import javax.swing.JPanel
 
-
-
-
 abstract class Panel : JPanel(), Listener {
     companion object {
         const val GAP_BETWEEN_PR_COMPONENTS = 5
@@ -19,7 +16,7 @@ abstract class Panel : JPanel(), Listener {
 
     fun dataUpdated(diff: Diff) {
         diff.added.values.sortedBy { it.updatedAt }
-                .forEach{ add(createPRComponent(it), 0) }
+                .forEach { add(createPRComponent(it), 0) }
 
         val toRemove = mutableListOf<Component>()
         for (i in 0 until componentCount) {
