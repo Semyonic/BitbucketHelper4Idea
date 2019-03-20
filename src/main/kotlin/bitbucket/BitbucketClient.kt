@@ -24,10 +24,10 @@ class BitbucketClient(
         objReader: ObjectReader,
         private val objWriter: ObjectWriter,
         private val listener: ClientListener
-    ) {
+) {
     private val log = Logger.getInstance("BitbucketClient")
     private val mergeStatusResponseHandler = HttpResponseHandler(
-            objReader, object : TypeReference<MergeStatus>() {}, listener)
+            objReader, object : TypeReference<PagedResponse<MergeStatus>>() {}, listener)
     private val pagedResponseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PagedResponse<PR>>() {}, listener)
     private val appVersionResponseHandler = HttpResponseHandler(
@@ -101,7 +101,7 @@ class BitbucketClient(
     private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): List<PR> {
         return try {
             val urlBuilder = UrlBuilder.fromUrl(URL(settings.url))
-                    .pathSegments("rest", "inbox","latest","pull-requests")
+                    .pathSegments("rest", "inbox", "latest", "pull-requests")
 
             val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
             filterByProject(replayPageRequest(request) { inbox(role, limit, Start(it)) })
@@ -111,29 +111,32 @@ class BitbucketClient(
         }
     }
 
-    fun retrieveMergeStatus(pr: PR): MergeStatus {
-        return try {
-            val urlBuilder = mergeUrl(pr)
+    // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests
+    fun retrieveMergeStatus(pr: PR): List<MergeStatus> {
+        try {
+            val urlBuilder = urlBuilder().pathSegments(
+                    "rest", "api", "1.0", "projects", pr.projectKey, "repos",
+                    pr.repoSlug, "pull-requests")
             val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-            val mergeStatus = sendRequest(request, mergeStatusResponseHandler)
-            mergeStatus.unknown = false
-            mergeStatus
+            val pagedResponse = sendRequest(request, mergeStatusResponseHandler)
+            val mergeStat = ArrayList(pagedResponse.values)
+            return mergeStat
         } catch (e: Exception) {
-            listener.requestFailed(e)
-            MergeStatus(false, false, listOf(Veto("Request Error", "")))
+            log.info(e)
         }
+        return emptyList()
     }
 
+    // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/merge
     private fun mergeUrl(pr: PR): UrlBuilder {
-        return urlBuilder().pathSegments(
-                "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "merge")
-                .queryParam("version", pr.version.toString())
+        return urlBuilder().pathSegments("rest", "api", "1.0", "projects", pr.projectKey, "repos", pr.repoSlug,
+                "pull-requests", pr.id.toString(), "merge")
     }
 
     private fun filterByProject(prs: List<PR>): List<PR> {
         return prs.filter {
             it.projectKey.equals(settings.project, true)
-            && settings.slug.contains(it.repoSlug,true)
+                    && settings.slug.contains(it.repoSlug, true)
         }
     }
 
@@ -143,7 +146,7 @@ class BitbucketClient(
         applyParameters(urlBuilder, start, order, state)
 
         val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-        return replayPageRequest(request) {findPRs(state, order, Start(it))}
+        return replayPageRequest(request) { findPRs(state, order, Start(it)) }
     }
 
     private fun urlBuilder() = UrlBuilder.fromUrl(URL(settings.url)).pathSegments("rest", "latest")
@@ -153,7 +156,7 @@ class BitbucketClient(
             param.apply(urlBuilder)
     }
 
-    private fun <T> sendRequest(request : HttpUriRequest, responseHandler: HttpResponseHandler<T>) =
+    private fun <T> sendRequest(request: HttpUriRequest, responseHandler: HttpResponseHandler<T>) =
             responseHandler.handle(httpClient.execute(request))
 
     private fun replayPageRequest(request: HttpUriRequest, replay: (Int) -> List<PR>): List<PR> {

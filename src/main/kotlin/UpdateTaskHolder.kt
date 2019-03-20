@@ -54,28 +54,28 @@ object UpdateTaskHolder {
         @Volatile
         var taskFuture: ScheduledFuture<*>? = null
 
-        override fun run() {
-            try {
-                log.debug("Running UpdateTask...")
-                Model.updateReviewingPRs(client.reviewedPRs())
-                val ownPRs = client.ownPRs()
-                //If user has too many open pull request, we will not retrieve merge status for every of them
-                ownPRs.subList(0, Math.min(ownPRs.size, 20)).forEach { it.mergeStatus = client.retrieveMergeStatus(it) }
-                Model.updateOwnPRs(ownPRs)
-                // TODO: Update created pull-requests filter here.
-            } catch (e: HttpResponseHandler.UnauthorizedException) {
-                println("UnauthorizedException")
-                cancel()
-            } catch (e: IOException) {
-                println("IOException: ${e.message}")
-                log.warn(e)
-                Model.showNotification("Error while trying to connect to a remote host: ${e.message} \n" +
-                        "Either myBitbucket settings are invalid or the host is unreachable",
-                        NotificationType.WARNING)
-            } catch (e: Exception) {
-                println("Error while trying to execute update task: ${e.message}")
-                log.warn(e)
+        override fun run() = try {
+            log.debug("Running UpdateTask...")
+            Model.updateReviewingPRs(client.reviewedPRs())
+            val ownPRs = client.ownPRs()
+            //If user has too many open pull request, we will not retrieve merge status for every of them
+            ownPRs.subList(0, Math.min(ownPRs.size, 20)).forEach {
+                it.mergeStatus = client.retrieveMergeStatus(it).listIterator().next()
+                // replayPageRequest(request) { findPRs(state, order, Start(it)) }
             }
+            Model.updateOwnPRs(ownPRs)
+        } catch (e: HttpResponseHandler.UnauthorizedException) {
+            println("UnauthorizedException")
+            cancel()
+        } catch (e: IOException) {
+            println("IOException: ${e.message}")
+            log.warn(e)
+            Model.showNotification("Error while trying to connect to a remote host: ${e.message} \n" +
+                    "Either myBitbucket settings are invalid or the host is unreachable",
+                    NotificationType.WARNING)
+        } catch (e: Exception) {
+            println("Error while trying to execute update task: ${e.message}")
+            log.warn(e)
         }
 
         override fun setFuture(future: ScheduledFuture<*>) {
@@ -90,25 +90,27 @@ object UpdateTaskHolder {
     }
 
     //This class does nothing
-    class DummyTask: CancellableTask {
+    class DummyTask : CancellableTask {
         override fun createToReschedule(client: BitbucketClient): CancellableTask {
             return DummyTask()
         }
+
         override fun setFuture(future: ScheduledFuture<*>) {}
         override fun cancel() {}
         override fun run() {}
     }
 
-    interface CancellableTask: Runnable {
+    interface CancellableTask : Runnable {
         fun setFuture(future: ScheduledFuture<*>)
         fun createNew(client: BitbucketClient): CancellableTask {
             return UpdateTask(client)
         }
+
         fun createToReschedule(client: BitbucketClient): CancellableTask
         fun cancel()
     }
 
-    class NotifyingClientListener: ClientListener {
+    class NotifyingClientListener : ClientListener {
         private val errorCounter: AtomicInteger = AtomicInteger(0)
 
         override fun invalidCredentials() {
